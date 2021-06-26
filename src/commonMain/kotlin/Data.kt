@@ -34,4 +34,4 @@ data class UrlParam(val url:String,val html:String)
 
 const val websocketPath="/webSocket"
 
-const val websiteTitle="朴实无华的漫画解析工具"
+const val websiteTitle="朴实无华的takeshobo漫画解析工具"

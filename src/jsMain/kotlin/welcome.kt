@@ -26,7 +26,7 @@ external interface WelcomeProps : RProps {
     var webSocket:WebSocket
 }
 
-data class WelcomeState(var url:String="",var result:String="",var percentage:kotlin.Float=0F) : RState
+data class WelcomeState(var url:String="",var result:String="",var percentage:kotlin.Float=0F,var allowInput:Boolean=true) : RState
 
 fun Double.format(digits: Int): String = this.asDynamic().toFixed(digits)
 fun Float.format(digits: Int): String = this.asDynamic().toFixed(digits)
@@ -43,13 +43,11 @@ class Welcome(props: WelcomeProps) : RComponent<WelcomeProps, WelcomeState>(prop
                     if(data.contains("ptimg-version")){
                         val urlResult=Json.decodeFromString<UrlResult>(data)
                         console.info("ptimg_version:${urlResult.t.ptimg_version}")
-                        ImageLoader(urlResult = urlResult).apply {
-                            rebuild()
-                            create()
-                        }
+                        ImageLoader(urlResult = urlResult).rebuild()
                     }else{
                         val task=Json.decodeFromString<ParseTask>(data)
                         state.result="解析进度：${task.percentage}%"
+                        state.allowInput=(state.percentage==100F)
                         setState(state)
                     }
                 }
@@ -72,9 +70,9 @@ class Welcome(props: WelcomeProps) : RComponent<WelcomeProps, WelcomeState>(prop
                     href="https://gammaplus.takeshobo.co.jp"
                     target="_blank"
                 }
-                +"漫画"
+                +"takeshobo"
             }
-            +"解析工具"
+            +"漫画解析工具"
         }
 
         styledDiv{
@@ -93,6 +91,7 @@ class Welcome(props: WelcomeProps) : RComponent<WelcomeProps, WelcomeState>(prop
                     attrs{
                         type=InputType.text
                         value = state.url
+                        disabled = !state.allowInput
                         onChangeFunction = { event ->
                             (event.target as HTMLInputElement).let {
                                 console.info(it.value)
@@ -117,36 +116,42 @@ class Welcome(props: WelcomeProps) : RComponent<WelcomeProps, WelcomeState>(prop
 
             button {
                 attrs {
+                    disabled=!state.allowInput
                     onClickFunction={
-
+                    state.allowInput=false
+                    state.result="初始化解析任务请稍等"
+                    setState(state)
                     val formData=FormData()
                         formData.append("url",state.url)
-                        window.fetch("/api/json", RequestInit(method = "post",body = formData)).then {
+                        window.fetch("/api/json", RequestInit(method = "post",body = formData))
+                        .then {
                             it.text()
                         }.then {
                             console.info(it)
+                            state.result=Json.decodeFromString<MessageResponse>(it).message
+                            setState(state)
                         }
                     }
                 }
                 +"开始解析"
             }
 
-            if(state.result!=""){
-                styledDiv {
-                    +state.result
-                }
+            div {
+                +state.result
+            }
+
+            if(state.percentage>0F&&state.percentage<100F){
                 button {
                     attrs {
                         onClickFunction={
-                            state.result=""
+                            props.webSocket.send("cancel")
+                            state=WelcomeState()
                             setState(state)
                         }
                     }
-                    +"清空消息"
+                    +"取消解析任务"
                 }
             }
-
-
         }
 
     }

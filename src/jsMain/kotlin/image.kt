@@ -1,6 +1,8 @@
 import kotlinext.js.getOwnPropertyNames
 import kotlinx.browser.document
-import kotlinx.css.head
+import kotlinx.browser.window
+import org.khronos.webgl.ArrayBuffer
+import org.khronos.webgl.DataView
 import org.khronos.webgl.Uint8Array
 import org.khronos.webgl.set
 import org.w3c.dom.CanvasRenderingContext2D
@@ -15,7 +17,7 @@ import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.round
-
+import org.w3c.dom.WindowOrWorkerGlobalScope
 
 data class un(val width: Int, val height: Int)
 
@@ -130,6 +132,8 @@ class ImageLoader(val urlResult: UrlResult){
 
     private var imageHeight=0.0
 
+    private val tasks= mutableListOf<Promise<Image>>()
+
     //speedbinb.js?dmy=016301:formatted:8766
     private fun callback(t:un): List<n> {
         d.urlResult=urlResult
@@ -198,39 +202,76 @@ class ImageLoader(val urlResult: UrlResult){
             }
 
         }
-        canvasToBlob(t=canvas,{blob: Blob ->
-            console.info("blob.size:${blob.size}")
-            val i=URL.createObjectURL(blob=blob)
-            console.info("漫画URL:${i}")
-            Image().apply {
-                onload={event: Event ->
-                    canvasHtml.let {
-                        canvas->
-                        val ctx:CanvasRenderingContext2D= canvas.getContext("2d") as CanvasRenderingContext2D
-                        ctx.drawImage(this,0.0,imageHeight,naturalWidth.toDouble(),naturalHeight.toDouble().apply {
-                            imageHeight+=this
-                            console.info("拼接图片imageHeight:${imageHeight}")
-                        })
+
+        Promise<Image>(executor = { resolve, _ ->
+            canvasToBlob(t=canvas,{blob: Blob ->
+                console.info("blob.size:${blob.size}")
+                val i=URL.createObjectURL(blob=blob)
+                console.info("加载图片dataUrl:\n${i}")
+                Image().apply {
+                    onload={event: Event ->
+                        imageHeight+=this.naturalHeight
+                        resolve(this)
                     }
+                    src=i
                 }
-                src=i
-            }
-        })
+            })
+        }).apply {
+            tasks.add(this)
+        }
     }
 
-    fun create(){
-        Image().apply {
-            onload={event: Event ->
-                console.info("拼接图片大小naturalWidth:${naturalWidth},naturalHeight:${naturalHeight}")
-            }
-            src=canvasHtml.toDataURL()
+    fun dataURItoBlob(dataURI:String): Blob {
+        // convert base64 to raw binary data held in a string
+        val byteString = window.atob(dataURI.split(',')[1])
+
+        // separate out the mime component
+        val mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0]
+
+        // write the bytes of the string to an ArrayBuffer
+        val arrayBuffer = ArrayBuffer(byteString.length)
+        val _ia = Uint8Array(arrayBuffer)
+
+        byteString.withIndex().forEach {
+            _ia[it.index] = it.value.code.toByte()
         }
 
+        val dataView = DataView(arrayBuffer);
+        val blob = Blob(arrayOf(dataView),options = BlobPropertyBag(type = mimeString));
+        return blob
     }
 
+    private fun create(){
+        Promise.all(promise = tasks.toTypedArray()).then {
+                    canvasHtml.let {
+                        canvas->
+                        canvas.width=it.first().naturalWidth
+                        canvas.height=imageHeight.toInt()
+                        val ctx:CanvasRenderingContext2D= canvas.getContext("2d") as CanvasRenderingContext2D
+                        ctx.clearRect(0.0, 0.0, canvas.width.toDouble(), canvas.height.toDouble())
+                        var dy=0.0
+                        it.forEach {
+                            ctx.drawImage(image=it,dx=0.0,dy=dy,
+                                dw=it.naturalWidth.toDouble(),dh=it.naturalHeight.toDouble().apply {
+                                    dy+=this.toInt()-1
+                            })
+                        }
+                        Image().apply {
+                            onload={
+                                console.info("拼接图片大小naturalWidth:${naturalWidth},naturalHeight:${naturalHeight}")
+                            }
+                            src=canvas.toDataURL().let { URL.createObjectURL(dataURItoBlob(it)) }.apply {
+                                console.info("拼接图片url：\n$this")
+                            }
+                        }
+                    }
+        }
+
+
+    }
 
     //speedbinb.js?dmy=016301:formatted:3798
-    fun canvasToBlob(
+    private fun canvasToBlob(
         t:HTMLCanvasElement, callback:(t:Blob)->Unit, n:String="image/jpeg", r: Double =.9){
         val i=t.toDataURL(type=n,quality = r).split(",")[1]
         console.info("url length:${i.length}")
@@ -282,6 +323,7 @@ class ImageLoader(val urlResult: UrlResult){
 //                val n=t(width = t.width,height = t.height)
                 us(t=t,image=it)
             }
+            create()
         }
     }
 
