@@ -28,3 +28,4 @@ jobs:
           SSH_PASS: ${{ secrets.SSH_PASS }}
           # Authentification token for ngrok
           NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
+          NGROK_REGION: ap
