@@ -17,10 +17,14 @@ jobs:
         run: chmod +x gradlew
       - name: Gradle wrapper
         run: gradle wrapper --gradle-version 7.1
-      - name: Get Public IP
-        run: curl 'https://api.ipify.org?format=json'
       - name: Run with Gradle
-        run: ./gradlew run
+        run: nohup ./gradlew run &
+      - name: Ngrok TCP Tunelling
+        uses: apogiatzis/ngrok-tunneling-action@v0.1.4
+        with:
+          timeout: 1h
+          port: 8080
+          ngrok_authtoken: ${{ secrets.NGROK_AUTHTOKEN }}
 
 
 
