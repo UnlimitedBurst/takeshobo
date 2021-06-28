@@ -14,7 +14,8 @@ fun WebSocket.sendCommand(command: WebSocketClientCommand) {
 
 fun main() {
     window.onload = {
-        val webSocket = WebSocket("ws://${window.location.host}${Api.websocketPath}")
+        val webSocket =
+            WebSocket("${if (window.location.protocol == "https:") "wss" else "ws"}://${window.location.host}${Api.websocketPath}")
         webSocket.onopen = { event: Event -> console.info("打开连接:${event}") }
         webSocket.onclose = { event: Event -> console.info("关闭连接:${event}") }
         webSocket.onerror = { event: Event -> console.error("发生错误:${event}") }
