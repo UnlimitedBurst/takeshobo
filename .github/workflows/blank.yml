@@ -3,7 +3,7 @@ name: Java CI
 on: [push,workflow_dispatch]
 
 jobs:
-  build:
+  Run:
     runs-on: ubuntu-latest
 
     steps:
@@ -14,10 +14,13 @@ jobs:
           java-version: '11'
           distribution: 'adopt'
       - name: Grant execute permission for gradlew
-        run: chmod +x gradlew  
+        run: chmod +x gradlew
       - name: Gradle wrapper
-        run: gradle wrapper
-      - name: Build with Gradle
-        run: ./gradlew assemble
+        run: gradle wrapper --gradle-version 7.1
       - name: Get Public IP
         run: curl 'https://api.ipify.org?format=json'
+      - name: Run with Gradle
+        run: ./gradlew run
+
+
+
