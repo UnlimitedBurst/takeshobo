@@ -8,16 +8,16 @@ import org.khronos.webgl.set
 import org.w3c.dom.CanvasRenderingContext2D
 import org.w3c.dom.HTMLCanvasElement
 import org.w3c.dom.Image
-import org.w3c.dom.events.Event
 import org.w3c.dom.url.URL
+import org.w3c.fetch.RequestInit
 import org.w3c.files.Blob
 import org.w3c.files.BlobPropertyBag
+import org.w3c.xhr.FormData
 import kotlin.js.Promise
 import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.round
-import org.w3c.dom.WindowOrWorkerGlobalScope
 
 data class un(val width: Int, val height: Int)
 
@@ -96,7 +96,7 @@ object d {
         val n =   (Regex("^([^:]+):(\\d+),(\\d+)\\+(\\d+),(\\d+)>(\\d+),(\\d+)\$").matchEntire(i)
             ?: throw IllegalArgumentException("Invalid format for Image Transfer : $i")).groupValues
         val r = n[1]
-        if (r !in t.getOwnPropertyNames())
+        if ("_$r" !in t.getOwnPropertyNames())
             throw IllegalArgumentException("resid $r not found.")
         return coord(
             resid = r, xsrc = n[2].toInt(10), ysrc = n[3].toInt(10), width = n[4].toInt(10),
@@ -117,43 +117,64 @@ object d {
     }
 
     //speedbinb.js?dmy=016301:formatted:8604
-    fun Gs():n{
-        val e= FS()
-        val u=e.views[0]
-        return n(width = u.width,height = u.height,transfers = listOf(transfer(index = 0,coords = u.coords)))
+    fun Gs(): n {
+        val e = FS()
+        val u = e.views[0]
+        return n(width = u.width, height = u.height, transfers = listOf(transfer(index = 0, coords = u.coords)))
     }
 
 }
 
+object ImageDataManager {
+    private val data = mutableListOf<ImageData>()
 
-class ImageLoader(val urlResult: UrlResult){
+    fun append(d: ImageData) {
+        data.add(d)
+    }
 
-    private val canvasHtml=createCanvas()
+    fun requestZip(urlResult: UrlResult) {
+        val form = FormData()
+        form.apply {
+            append(name = "romajiTitle", value = urlResult.romajiTitle)
+            data.forEach {
+                append(name = it.fileName, value = it.blob, filename = it.fileName)
+            }
+        }
+        window.fetch(Api.IMAGE_API, RequestInit(method = "post", body = form))
+        data.clear()
+    }
+}
 
-    private var imageHeight=0.0
+data class ImageData(val blob: Blob, val fileName: String)
 
-    private val tasks= mutableListOf<Promise<Image>>()
+class ImageLoader(val urlResult: UrlResult) {
+
+    private val canvasHtml = createCanvas()
+
+    private var imageHeight = 0.0
+
+    //图片解析
+    private val tasks = mutableListOf<Promise<Image>>()
 
     //speedbinb.js?dmy=016301:formatted:8766
-    private fun callback(t:un): List<n> {
-        d.urlResult=urlResult
-        val n=d.Gs()
+    private fun callback(): List<n> {
+        d.urlResult = urlResult
+        val n = d.Gs()
 //        console.info("Gs:")
 //        console.info(n)
-        val u=e(un=un(width = n.width,height = n.height))
-        val s=n.transfers[0].coords
-        val h= mutableListOf<n>()
-        repeat(u.Xs){
-            val r=u.Us(t=it)
+        val u = e(un = un(width = n.width, height = n.height))
+        val s = n.transfers[0].coords
+        val h = mutableListOf<n>()
+        repeat(u.Xs) {
+            val r = u.Us(t = it)
 //            console.info("r:")
 //            console.info(r)
-            val e= mutableListOf<coord>()
-            s.forEach {
-                t->
+            val e = mutableListOf<coord>()
+            s.forEach { t ->
 //                console.info("-------------------")
 //                console.info("t:")
 //                console.info(t)
-                val _i=p.Rectangle(t=t.xdest,i=t.ydest,n=t.width,r=t.height)
+                val _i = p.Rectangle(t = t.xdest, i = t.ydest, n = t.width, r = t.height)
 //                console.info("p.Rectangle(i):")
 //                console.info(_i)
                 p.intersect(t=r,i=_i)?.let {
@@ -185,7 +206,7 @@ class ImageLoader(val urlResult: UrlResult){
 
     //speedbinb.js?dmy=016301:formatted:7976
     private fun us(t:n,image:Image){
-        console.info("开始绘制漫画页")
+//        console.info("开始绘制漫画页")
         val canvas:HTMLCanvasElement= createCanvas()
         canvas.apply {
             width=t.width
@@ -205,15 +226,15 @@ class ImageLoader(val urlResult: UrlResult){
 
         Promise<Image>(executor = { resolve, _ ->
             canvasToBlob(t=canvas,{blob: Blob ->
-                console.info("blob.size:${blob.size}")
+//                console.info("blob.size:${blob.size}")
                 val i=URL.createObjectURL(blob=blob)
                 console.info("加载图片dataUrl:\n${i}")
                 Image().apply {
-                    onload={event: Event ->
-                        imageHeight+=this.naturalHeight
+                    onload = {
+                        imageHeight += this.naturalHeight
                         resolve(this)
                     }
-                    src=i
+                    src = i
                 }
             })
         }).apply {
@@ -221,7 +242,7 @@ class ImageLoader(val urlResult: UrlResult){
         }
     }
 
-    fun dataURItoBlob(dataURI:String): Blob {
+    fun dataURItoBlob(dataURI: String): Blob {
         // convert base64 to raw binary data held in a string
         val byteString = window.atob(dataURI.split(',')[1])
 
@@ -236,33 +257,39 @@ class ImageLoader(val urlResult: UrlResult){
             _ia[it.index] = it.value.code.toByte()
         }
 
-        val dataView = DataView(arrayBuffer);
-        val blob = Blob(arrayOf(dataView),options = BlobPropertyBag(type = mimeString));
-        return blob
+        val dataView = DataView(arrayBuffer)
+        return Blob(arrayOf(dataView), options = BlobPropertyBag(type = mimeString))
     }
 
-    private fun create(){
+
+    private fun create(resolve: (value: Boolean) -> Unit) {
         Promise.all(promise = tasks.toTypedArray()).then {
-                    canvasHtml.let {
-                        canvas->
-                        canvas.width=it.first().naturalWidth
-                        canvas.height=imageHeight.toInt()
-                        val ctx:CanvasRenderingContext2D= canvas.getContext("2d") as CanvasRenderingContext2D
-                        ctx.clearRect(0.0, 0.0, canvas.width.toDouble(), canvas.height.toDouble())
-                        var dy=0.0
-                        it.forEach {
-                            ctx.drawImage(image=it,dx=0.0,dy=dy,
-                                dw=it.naturalWidth.toDouble(),dh=it.naturalHeight.toDouble().apply {
-                                    dy+=this.toInt()-1
-                            })
-                        }
-                        Image().apply {
-                            onload={
-                                console.info("拼接图片大小naturalWidth:${naturalWidth},naturalHeight:${naturalHeight}")
-                            }
-                            src=canvas.toDataURL().let { URL.createObjectURL(dataURItoBlob(it)) }.apply {
-                                console.info("拼接图片url：\n$this")
-                            }
+            canvasHtml.let { canvas ->
+                canvas.width = it.first().naturalWidth
+                canvas.height = imageHeight.toInt()
+                val ctx: CanvasRenderingContext2D = canvas.getContext("2d") as CanvasRenderingContext2D
+                ctx.clearRect(0.0, 0.0, canvas.width.toDouble(), canvas.height.toDouble() - 4 * 2)
+                var dy = 0.0
+                it.forEach {
+                    ctx.drawImage(
+                        image = it, dx = 0.0, dy = dy,
+                        dw = it.naturalWidth.toDouble(), dh = it.naturalHeight.toDouble().apply {
+                            dy += this.toInt() - 4
+                        })
+                }
+                Image().apply {
+                    onload = {
+                        console.info("拼接图片大小naturalWidth:${naturalWidth},naturalHeight:${naturalHeight}")
+                    }
+                    src = canvas.toDataURL().let {
+                        val blob = dataURItoBlob(it)
+                        val name = "${urlResult.romajiTitle}_${urlResult.filename}"
+                        ImageDataManager.append(ImageData(blob = blob, fileName = name))
+                        resolve(true)
+                        URL.createObjectURL(blob)
+                    }.apply {
+                        console.info("拼接图片url：\n$this")
+                    }
                         }
                     }
         }
@@ -274,12 +301,12 @@ class ImageLoader(val urlResult: UrlResult){
     private fun canvasToBlob(
         t:HTMLCanvasElement, callback:(t:Blob)->Unit, n:String="image/jpeg", r: Double =.9){
         val i=t.toDataURL(type=n,quality = r).split(",")[1]
-        console.info("url length:${i.length}")
+//        console.info("url length:${i.length}")
         val blobTransfer=w(t=i)
 //        console.info("w[i]:")
 //        console.info(blobTransfer)
         val blob= Blob(blobParts=arrayOf(blobTransfer),options = BlobPropertyBag(type = n))
-        console.info("blob size:${blob.size}")
+//        console.info("blob size:${blob.size}")
         callback(blob)
     }
 
@@ -314,17 +341,17 @@ class ImageLoader(val urlResult: UrlResult){
     }
 
     //speedbinb.js?dmy=016301:formatted:8020
-    fun rebuild(){
-        hs().then {
-            console.info("image(naturalWidth:${it.naturalWidth},naturalHeight=${it.naturalHeight})")
-            val f=un(width = it.naturalWidth,height = it.naturalHeight)
-            callback(t=f).map {
-                    t->
-//                val n=t(width = t.width,height = t.height)
-                us(t=t,image=it)
+    fun rebuild(): Promise<Boolean> {
+        return Promise(executor = { resolve, _ ->
+            hs().then {
+                console.info("image(naturalWidth:${it.naturalWidth},naturalHeight=${it.naturalHeight})")
+                callback().map { t ->
+                    //                val n=t(width = t.width,height = t.height)
+                    us(t = t, image = it)
+                }
+                create(resolve = resolve)
             }
-            create()
-        }
+        })
     }
 
     //speedbinb.js?dmy=016301:formatted:7949

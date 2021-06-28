@@ -1,5 +1,4 @@
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     val kotlin_version="1.5.20"
@@ -18,7 +17,6 @@ group = "jp.co.takeshobo"
 version = "1.0-SNAPSHOT"
 
 repositories {
-    jcenter()
     mavenCentral()
     maven { url = uri("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/kotlin-js-wrappers") }
     maven { url = uri("https://maven.pkg.jetbrains.space/public/p/kotlinx-html/maven") }
@@ -27,14 +25,17 @@ repositories {
 kotlin {
     jvm {
         compilations.all {
-            kotlinOptions.jvmTarget = "1.8"
+            kotlinOptions {
+                jvmTarget = "11"
+                freeCompilerArgs = freeCompilerArgs + "-Xopt-in=kotlin.RequiresOptIn"
+            }
         }
         testRuns["test"].executionTask.configure {
             useJUnit()
         }
         withJava()
     }
-    js(LEGACY) {
+    js(IR) {
         binaries.executable()
         browser {
             commonWebpackConfig {
@@ -46,12 +47,17 @@ kotlin {
                 }
             }
         }
+        compilations.all {
+            kotlinOptions {
+                freeCompilerArgs = freeCompilerArgs + "-Xopt-in=kotlin.RequiresOptIn"
+            }
+        }
     }
     sourceSets {
         val commonMain by getting{
             dependencies {
-                implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlin_version")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serialization_version")
+//                implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlin_version")
             }
         }
         val commonTest by getting {
@@ -67,7 +73,6 @@ kotlin {
                 implementation("io.ktor:ktor-html-builder:$ktor_version")
                 implementation("io.ktor:ktor-serialization:$ktor_version")
                 implementation("io.ktor:ktor-websockets:$ktor_version")
-
                 implementation("ch.qos.logback:logback-classic:$logback_version")
 
             }
@@ -75,6 +80,7 @@ kotlin {
         val jvmTest by getting{
             dependencies {
                 implementation("io.ktor:ktor-server-tests:$ktor_version")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.0")
             }
 
         }
@@ -83,6 +89,7 @@ kotlin {
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react:${`kotlin-react-version`}")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom:${`kotlin-react-version`}")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-styled:${`kotlin-styled-version`}")
+
             }
         }
         val jsTest by getting
@@ -91,12 +98,6 @@ kotlin {
 
 application{
     mainClass.set("ServerKt")
-}
-
-tasks {
-    "run"(JavaExec::class) {
-        environment("CHROME_BIN","F:\\ChromeUpdater\\chrome.exe")
-    }
 }
 
 tasks.getByName<KotlinWebpack>("jsBrowserProductionWebpack") {
@@ -114,12 +115,7 @@ tasks.getByName<JavaExec>("run") {
     classpath(tasks.getByName<Jar>("jvmJar"))
 }
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        freeCompilerArgs = listOf("-Xopt-in=kotlin.RequiresOptIn")
-    }
-}
-
 tasks.withType<ProcessResources>{
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    exclude(".gitkeep")
 }

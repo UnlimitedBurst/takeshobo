@@ -1,8 +1,8 @@
 package cool.kirito.bili.live.server.plugins
 
-import io.ktor.http.*
 import io.ktor.application.*
 import io.ktor.features.*
+import io.ktor.http.*
 
 fun Application.configureHTTP() {
     install(CORS) {
