@@ -18,6 +18,6 @@ jobs:
       - name: Gradle wrapper
         run: gradle wrapper
       - name: Build with Gradle
-        run: ./gradlew build
+        run: ./gradlew assemble
       - name: Get Public IP
         run: curl 'https://api.ipify.org?format=json'
