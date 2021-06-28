@@ -28,10 +28,5 @@ jobs:
           SSH_PASS: ${{ secrets.SSH_PASS }}
           # Authentification token for ngrok
           NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
-          # Region for ngrok session
-          NGROK_REGION: # optional, default is us
-          # Timeout in seconds for ngrok session
-          NGROK_TIMEOUT: # optional, default is 21500
-
 
 
