@@ -6,6 +6,6 @@
 
 ### 运行截图
 
-<img src="/screenshot/1.png" alt="1"/>
-<img src="/screenshot/2.png" alt="2"/>
-<img src="/screenshot/3.png" alt="3"/>
+<img src="https://gitea.kirito.cool/panqihua/takeshobo/media/branch/master/screenshot/1.png" alt="1"/>
+<img src="https://gitea.kirito.cool/panqihua/takeshobo/media/branch/master/screenshot/2.png" alt="2"/>
+<img src="https://gitea.kirito.cool/panqihua/takeshobo/media/branch/master/screenshot/3.png" alt="3"/>
