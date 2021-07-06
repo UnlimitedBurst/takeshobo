@@ -1,4 +1,4 @@
-# 爬取[takeshobo](https://gammaplus.takeshobo.co.jp/) 网站上的漫画
+# 下载[takeshobo](https://gammaplus.takeshobo.co.jp/)漫画
 
 ## 服务端：[ktor](https://ktor.io/)
 
