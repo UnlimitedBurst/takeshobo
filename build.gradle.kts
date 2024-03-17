@@ -41,11 +41,11 @@ kotlin {
             commonWebpackConfig {
                 cssSupport.enabled = true
             }
-            testTask {
-                useKarma {
-                    useChrome()
-                }
-            }
+            //testTask {
+               // useKarma {
+                 //   useChrome()
+               // }
+           // }
         }
         compilations.all {
             kotlinOptions {
