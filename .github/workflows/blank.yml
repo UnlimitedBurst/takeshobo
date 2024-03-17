@@ -19,7 +19,7 @@ jobs:
         with:
            gradle-version: ${{ vars.GRADLE_VERSION }}
       - name: Execute Gradle build
-        run: gradle build  --stacktrace
+        run: gradle build
       - name: Run with Gradle
         run: nohup gradle run &
       - name: Debug via SSH
