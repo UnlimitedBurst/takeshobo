@@ -30,9 +30,9 @@ kotlin {
                 freeCompilerArgs = freeCompilerArgs + "-Xopt-in=kotlin.RequiresOptIn"
             }
         }
-        testRuns["test"].executionTask.configure {
-            useJUnit()
-        }
+       // testRuns["test"].executionTask.configure {
+       //     useJUnit()
+       // }
         withJava()
     }
     js(IR) {
