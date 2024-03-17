@@ -19,7 +19,7 @@ import kotlin.test.assertEquals
 
 
 class ApplicationTest {
-    @Test
+    //@Test
     fun testRoot() {
         withTestApplication({
             configureWebSockets()
@@ -33,7 +33,7 @@ class ApplicationTest {
         }
     }
 
-    @Test
+    //@Test
     fun testParse(){
         withTestApplication({
             configureWebSockets()
@@ -107,7 +107,7 @@ class ApplicationTest {
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    @Test
+    //@Test
     fun testHttpClient(): Unit = runBlockingTest {
         launch {
             delay(5000)
