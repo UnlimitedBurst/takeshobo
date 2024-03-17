@@ -16,7 +16,7 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Gradle wrapper
-        run: ./gradlew build
+        run: ./gradlew wrapper --gradle-version 7.1
       - name: Run with Gradle
         run: nohup ./gradlew run &
       - name: Debug via SSH
