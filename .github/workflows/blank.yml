@@ -25,7 +25,7 @@ jobs:
       - name: Debug via SSH
         # You may pin to the exact commit or the version.
         # uses: luchihoratiu/debug-via-ssh@47bd355eed1beb486b11cd3babd0223d142fe833
-        uses: UnlimitedBurst/debug-via-ssh@v1.0
+        uses: UnlimitedBurst/debug-via-ssh@4777335d107960b3593734094e99399c1df22e60
         with:
           # Password for SSH session
           SSH_PASS: ${{ secrets.SSH_PASS }}
