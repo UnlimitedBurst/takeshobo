@@ -69,9 +69,7 @@ fun Application.parse() {
                             titlePrefix,
                             ""
                         ) ?: throw IllegalArgumentException("无法解析漫画标题")
-                    val romajiPrefix = "/manga/"
-                    val romajiTitle = Regex("$romajiPrefix\\w+").find(resHtml)?.value?.replace(romajiPrefix, "")
-                        ?: throw IllegalArgumentException("无法解析漫画罗马音标题")
+                    val romajiTitle = Regex("(?<=_files\\/)\\w+").find(resHtml)?.value?: throw IllegalArgumentException("无法解析漫画罗马音标题")
                     log.info("漫画标题title=$title,romajiTitle=$romajiTitle")
                     webSocketChannel.send(MangaInfo(href = urlParam, title = title, romajiTitle = romajiTitle))
                     val imageDir = File(filePath, romajiTitle).apply { if (!exists()) mkdir() }

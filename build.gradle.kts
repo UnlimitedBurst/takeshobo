@@ -17,6 +17,7 @@ group = "jp.co.takeshobo"
 version = "1.0-SNAPSHOT"
 
 repositories {
+//    maven { url=uri("https://maven.aliyun.com/repository/public/") }
     mavenCentral()
     maven { url = uri("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/kotlin-js-wrappers") }
     maven { url = uri("https://maven.pkg.jetbrains.space/public/p/kotlinx-html/maven") }
